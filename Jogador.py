@@ -23,7 +23,7 @@ class Jogador:
     def joga_humano(self):
         jogada = input('Escolha sua carta: ').upper()
         while jogada not in self.cartas_jogador:
-            jogada = input('Carta inválida, tent novamente: ').upper()
+            jogada = input('Carta inválida, tente novamente: ').upper()
         return jogada
 
     def joga_cpu(self, jogada_adv):
