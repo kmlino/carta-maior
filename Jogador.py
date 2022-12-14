@@ -5,11 +5,11 @@ baralho = Baralho()
 class Jogador:
 
     def __init__(self):
-        self.cartas_jogador = baralho.distribui()
+        #self.cartas_jogador = baralho.distribui()
         self.vitorias = 0
 
-    def get_cartas(self):
-        return self.cartas_jogador
+    # def get_cartas(self):
+    #     return self.cartas_jogador
 
     def get_vitorias(self):
         return self.vitorias
@@ -17,8 +17,8 @@ class Jogador:
     def set_vitoria(self, vencedor):
         self.vitorias += vencedor
 
-    def set_jogada(self, jogada):
-        self.cartas_jogador[self.cartas_jogador.index(jogada)] = None
+    # def set_jogada(self, jogada):
+    #     self.cartas_jogador[self.cartas_jogador.index(jogada)] = None
 
     def joga_humano(self):
         jogada = input('Escolha sua carta: ').upper()

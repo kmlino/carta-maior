@@ -8,8 +8,8 @@ class Baralho:
         self.valores = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
         self.cartas = [(x+y) for x in self.naipes for y in self.valores]
 
-    def get_cartas(self):
-        return self.cartas
+    # def get_cartas(self):
+    #     return self.cartas
 
     def embaralha(self):
         random.shuffle(self.cartas)
