@@ -2,6 +2,7 @@ import sys
 from design import *
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
+from Tabuleiro import *
 from Jogador import *
 from Baralho import *
 
@@ -12,6 +13,8 @@ class Tab(QMainWindow, Ui_MainWindow):
         super().setupUi(self)
         self.jogadas = []
         self.baralho = Baralho()
+        self.jogador1 = Jogador()
+        self.jogador2 = Jogador()
         self.cartas = baralho.distribui()
         self.cartas_p2 = baralho.distribui()
         self.vencedor_atual = 2
@@ -26,9 +29,8 @@ class Tab(QMainWindow, Ui_MainWindow):
 
         #self.pushButton_2.clicked.connect(self.comecar)
 
+
     def rodada_atual(self):
-        jogador1 = Jogador()
-        jogador2 = Jogador()
         naipe_da_vez = ''
 
         msg = QMessageBox()
@@ -71,12 +73,19 @@ class Tab(QMainWindow, Ui_MainWindow):
                 if carta == self.cartas[c]:
                     self.cartas[c] = None
             self.jogada_p1.setText(carta)
-            p2 = self.joga_p2(carta)
             if self.verifica_vencedor_rodada(carta, carta_p2, carta_p2[0]):
-                self.resultado.setText('Jogador 1 venceu a rodada')
+                self.jogador1.set_vitoria(1)
+                self.score.setText(f'{self.jogador1.get_vitorias()} x '
+                                   f'{self.jogador2.get_vitorias()} ')
+                self.resultado.setText('Jogador 1 ganhou')
             else:
-                self.resultado.setText('Jogador 2 venceu a rodada')
+                self.jogador2.set_vitoria(1)
+                self.score.setText(f'{self.jogador1.get_vitorias()} x '
+                                   f'{self.jogador2.get_vitorias()} ')
+                self.resultado.setText('Jogador 2 ganhou')
+            #self.cartas_p2[self.cartas_p2.index(carta_p2)] = None
             self.distribuir()
+
 
     def distribuir(self):
         self.carta_1.setText(self.cartas[0])
