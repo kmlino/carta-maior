@@ -1,8 +1,6 @@
 import sys
 from design import *
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
-from PyQt5.QtGui import QPixmap
-from Tabuleiro import *
 from Jogador import *
 from Baralho import *
 
@@ -13,8 +11,8 @@ class Tab(QMainWindow, Ui_MainWindow):
         super().setupUi(self)
         self.jogadas = []
         self.baralho = Baralho()
-        self.jogador1 = Jogador()
-        self.jogador2 = Jogador()
+        self.vitorias_p1 = 0
+        self.vitorias_p2 = 0
         self.cartas = baralho.distribui()
         self.cartas_p2 = baralho.distribui()
         self.vencedor_atual = 2
@@ -25,67 +23,49 @@ class Tab(QMainWindow, Ui_MainWindow):
         self.btn_carta_4.clicked.connect(lambda: self.clicar_btn(self.carta_4.text(), self.jogada_p2.text()))
         self.btn_carta_5.clicked.connect(lambda: self.clicar_btn(self.carta_5.text(), self.jogada_p2.text()))
         self.distribuir()
-        self.rodada_atual()
 
-        #self.pushButton_2.clicked.connect(self.comecar)
-
-
-    def rodada_atual(self):
-        naipe_da_vez = ''
-
-        msg = QMessageBox()
-        msg.setWindowTitle('JOGO DE COPAS')
-        if self.vencedor_atual == 0:
-            msg.setText('Rodada inicial, jogador 1 começa!')
+    def limitador(self):
+        if self.vitorias_p1 >= 3 or self.vitorias_p2 >= 3:
+            msg = QMessageBox()
+            msg.setWindowTitle('OVER')
+            msg.setText('Fim de jogo!')
             msg.show()
             msg.exec_()
-            self.distribuir()
-        elif self.vencedor_atual == 1:
-            msg.setText('Jogador 1 joga')
-            msg.show()
-            msg.exec_()
-        elif self.vencedor_atual == 2:
-            msg.setText('Jogador 2 joga')
-            msg.show()
-            msg.exec_()
-            self.joga_p2()
+            self.close()
 
     def recomecar(self):
         self.jogadas.clear()
         self.jogada_p1.clear()
         self.jogada_p2.clear()
         self.cartas = baralho.distribui()
+        self.cartas_p2 = baralho.distribui()
         self.distribuir()
 
     def clicar_btn(self, carta, carta_p2=None):
         if not carta:
             return
+        self.cartas[self.cartas.index(carta)] = None
         if not carta_p2:
             self.jogadas.append(carta)
-            for c in range(len(self.cartas)):
-                if carta == self.cartas[c]:
-                    self.cartas[c] = None
             self.jogada_p1.setText(carta)
+            self.joga_p2(carta)
             self.distribuir()
         else:
             self.jogadas.append(carta)
-            for c in range(len(self.cartas)):
-                if carta == self.cartas[c]:
-                    self.cartas[c] = None
             self.jogada_p1.setText(carta)
             if self.verifica_vencedor_rodada(carta, carta_p2, carta_p2[0]):
-                self.jogador1.set_vitoria(1)
-                self.score.setText(f'{self.jogador1.get_vitorias()} x '
-                                   f'{self.jogador2.get_vitorias()} ')
+                self.vitorias_p1 += 1
+                self.score.setText(f'{self.vitorias_p1} x '
+                                   f'{self.vitorias_p2} ')
                 self.resultado.setText('Jogador 1 ganhou')
             else:
-                self.jogador2.set_vitoria(1)
-                self.score.setText(f'{self.jogador1.get_vitorias()} x '
-                                   f'{self.jogador2.get_vitorias()} ')
+                self.vitorias_p2 += 1
+                self.score.setText(f'{self.vitorias_p1} x '
+                                   f'{self.vitorias_p2} ')
                 self.resultado.setText('Jogador 2 ganhou')
-            #self.cartas_p2[self.cartas_p2.index(carta_p2)] = None
-            self.distribuir()
 
+            self.distribuir()
+            self.limitador()
 
     def distribuir(self):
         self.carta_1.setText(self.cartas[0])
@@ -100,7 +80,6 @@ class Tab(QMainWindow, Ui_MainWindow):
         equal = []
         diff = []
         new = {}
-        resultado = ''
 
         if not carta_p1:
             for k, v in val.items():
@@ -113,9 +92,9 @@ class Tab(QMainWindow, Ui_MainWindow):
                     new = {i[1:]: i[0]}
 
             menor = min(new.items())
-            resultado = menor[1] + menor[0]
-            self.jogada_p2.setText(resultado)
-            return resultado
+            res = menor[1] + menor[0]
+            self.jogada_p2.setText(res)
+            return res
         else:
             #  Trasnforma os valores não numéricos em numéricos
             for k, v in val.items():
@@ -157,6 +136,18 @@ class Tab(QMainWindow, Ui_MainWindow):
                 if carta_p2 == self.cartas_p2[c]:
                     self.cartas_p2[c] = None
             self.jogada_p2.setText(carta_p2)
+            if self.verifica_vencedor_rodada(carta_p1, carta_p2, carta_p1[0]):
+                self.vitorias_p1 += 1
+                self.score.setText(f'{self.vitorias_p1} x '
+                                   f'{self.vitorias_p2} ')
+                self.resultado.setText('Jogador 1 ganhou')
+            else:
+                self.vitorias_p2 += 1
+                self.score.setText(f'{self.vitorias_p1} x '
+                                   f'{self.vitorias_p2} ')
+                self.resultado.setText('Jogador 2 ganhou')
+            self.limitador()
+            self.distribuir()
             return carta_p2
 
     def verifica_vencedor_rodada(self, jogada_p1, jogada_p2, naipe):
