@@ -1,6 +1,6 @@
 import sys
 from design import *
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from Cheap import *
 
 
@@ -15,20 +15,21 @@ class Tab(QMainWindow, Ui_MainWindow):
         self.p1_cards = self.cheap.to_distribute()
         self.p2_cards = self.cheap.to_distribute()
         self.current_winner = 2
-        self.restart.clicked.connect(self.restart)
-        self.btn_card_1.clicked.connect(lambda: self.clicar_btn(self.card_1.text(), self.p2_move.text()))
-        self.btn_card_2.clicked.connect(lambda: self.clicar_btn(self.card_2.text(), self.p2_move.text()))
-        self.btn_card_3.clicked.connect(lambda: self.clicar_btn(self.card_3.text(), self.p2_move.text()))
-        self.btn_card_4.clicked.connect(lambda: self.clicar_btn(self.card_4.text(), self.p2_move.text()))
-        self.btn_card_5.clicked.connect(lambda: self.clicar_btn(self.card_5.text(), self.p2_move.text()))
+        self.btn_restart.clicked.connect(self.restart)
+        self.btn_card_1.clicked.connect(lambda: self.click_btn(self.card_1.text(), self.p2_move.text()))
+        self.btn_card_2.clicked.connect(lambda: self.click_btn(self.card_2.text(), self.p2_move.text()))
+        self.btn_card_3.clicked.connect(lambda: self.click_btn(self.card_3.text(), self.p2_move.text()))
+        self.btn_card_4.clicked.connect(lambda: self.click_btn(self.card_4.text(), self.p2_move.text()))
+        self.btn_card_5.clicked.connect(lambda: self.click_btn(self.card_5.text(), self.p2_move.text()))
         self.to_distribute_main()
 
     # Responsible for counting the rounds and ending the game
     def limiter(self):
         if self.p1_wins >= 3 or self.p2_wins >= 3:
             msg = QMessageBox()
-            msg.setWindowTitle('OVER')
-            msg.setText('Fim de jogo!')
+            msg.setWindowTitle('GAME OVER!!!')
+            msg.setText('Player 1 won!') if self.p1_wins > 3 else msg.setText('Player 2 won!')
+            msg.setStandardButtons(QMessageBox.Close)
             msg.show()
             msg.exec_()
             self.close()
@@ -44,34 +45,37 @@ class Tab(QMainWindow, Ui_MainWindow):
 
     # Responsible for controlling the action on click the buttons of the cards
     # 'p2_card' parameter is None when the first player is the player 1
-    def clicar_btn(self, card, p2_card=None):
+    def click_btn(self, card, p2_card=None):
         # If there is no value, none action is taken
         if not card:
             return
         # If there is, the value will be removed from the list 'p1_cards' and printed in the field
         self.p1_cards[self.p1_cards.index(card)] = None
         if not p2_card:
-            # If there is no card in the field of player 2, I am the first
+            # If there is no card in the field of player 2, I am the first, and then he plays
             self.plays.append(card)
             self.p1_move.setText(card)
             self.p2_plays(card)
             self.to_distribute_main()
         else:
+            # If there is, my card will be compared with p2's card
             self.plays.append(card)
             self.p1_move.setText(card)
+            # Define the winner
             if self.round_winner_check(card, p2_card, p2_card[0]):
                 self.p1_wins += 1
                 self.score.setText(f'{self.p1_wins} x '
                                    f'{self.p2_wins} ')
-                self.result.setText('Jogador 1 ganhou')
+                self.result.setText('Player 1 Won!')
             else:
                 self.p2_wins += 1
                 self.score.setText(f'{self.p1_wins} x '
                                    f'{self.p2_wins} ')
-                self.result.setText('Jogador 2 ganhou')
+                self.result.setText('Player 2 Won!')
             self.limiter()
             self.to_distribute_main()
 
+    # Distribute the cards according to the lists
     def to_distribute_main(self):
         self.card_1.setText(self.p1_cards[0])
         self.card_2.setText(self.p1_cards[1])
@@ -79,86 +83,88 @@ class Tab(QMainWindow, Ui_MainWindow):
         self.card_4.setText(self.p1_cards[3])
         self.card_5.setText(self.p1_cards[4])
 
-    def p2_plays(self, p1_cards=None):
-        c = self.p2_cards.copy()
+    # Responsible to move the player 2
+    def p2_plays(self, p1_card=None):
+        p2_card_list = self.p2_cards.copy()
+        # Dictionary used to replace the letters to numbers
         val = {'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         equal = []
         diff = []
-        new = {}
+        new_dict = {}
 
-        if not p1_cards:
+        # If there isn't my card on the field, player 2 starts, and play your smaller card
+        if not p1_card:
             for k, v in val.items():
-                for i in c:
-                    if i is not None:
+                for i in p2_card_list:
+                    if i:
                         if i[1:] == k:
-                            c[c.index(i)] = i[0] + str(v)  # Ex: OJ -> O10
-            for i in c:
-                if i is not None:
-                    new = {i[1:]: i[0]}
-
-            menor = min(new.items())
-            res = menor[1] + menor[0]
+                            # If there's a letter in the values, here it's replaced to number
+                            p2_card_list[p2_card_list.index(i)] = i[0] + str(v)  # Ex: OJ -> O10
+            for i in p2_card_list:
+                if i:
+                    new_dict = {i[1:]: i[0]}
+            # The number is replaced to letter
+            smaller = min(new_dict.items())
+            res = smaller[1] + smaller[0]
             self.p2_move.setText(res)
             return res
+        # If so, the player 2 try his highest card
         else:
-            #  Trasnforma os valores não numéricos em numéricos
             for k, v in val.items():
-                for i in c:
-                    if i is not None:
+                for i in p2_card_list:
+                    if i:
                         if i[1:] == k:
-                            c[c.index(i)] = i[0] + str(v)  # Ex: OJ -> O10
+                            p2_card_list[p2_card_list.index(i)] = i[0] + str(v)  # Ex: OJ -> O10
 
-            # Armazena os naipes do jogador em uma lista
-            naipes = [x[0] if x is not None else None for x in c]
+            # Stores player suits in a list
+            suits = [x[0] if x is not None else None for x in p2_card_list]
 
-            # Confere se o naipe da carta adversária existe entre as minhas cartas
-            for x in c:
+            # Checks if the opponent's card suit exists among my cards
+            for x in p2_card_list:
                 if x is not None:
-                    if x[0] == p1_cards[0]:
-                        # Se sim, o naipe e o valor numérico serão armazenados numa lista com naipes iguais
+                    if x[0] == p1_card[0]:
+                        # If so, the suit and value will be stored in a suited list
                         equal.append([x[0], int(x[1:])])
                     else:
-                        # Se não, o naipe e o valor numérico serão armazenados numa lista com naipes diferentes
+                        # If not, the suit and value will be stored in a list with different suits
                         diff.append([x[0], int(x[1:])])
 
-            # Essa variável pegará a minha maior carta com o mesmo naipe, ou, se não houver naipe igual, a menor carta
-            res = max(equal) if p1_cards[0] in naipes else min(diff)
-
-            # Retorna os valores acima de 9 para letras
+            # This variable will take the highest card of the same suit, or, if there is no matching suit, the lowest
+            res = max(equal) if p1_card[0] in suits else min(diff)
             st = res[0]
             it = str(res[1])
 
-            # Caso o valor seja igual a umas das chaves, será substituido pela chave correspondente
+            # If the value is equal to one of the keys, it will be replaced by the corresponding key
             for k, y in val.items():
                 if it == str(y):
                     it = k
 
-            # Variável recebe a carta pronta para o 'return'
-            carta_p2 = str(st) + it
+            p2_card = str(st) + it
 
-            # Anula o valor na lista depois que a carta for usada
-            for c in range(len(self.p2_cards)):
-                if carta_p2 == self.p2_cards[c]:
-                    self.p2_cards[c] = None
+            # Null the value in the list after the card is used
+            for p2_card_list in range(len(self.p2_cards)):
+                if p2_card == self.p2_cards[p2_card_list]:
+                    self.p2_cards[p2_card_list] = None
 
-            # Realiza a jogada
-            self.p2_move.setText(carta_p2)
+            # Plays
+            self.p2_move.setText(p2_card)
 
-            #  Verifica qual é a maior carta e imprime o vencedor no campo 'resultado'
-            if self.round_winner_check(p1_cards, carta_p2, p1_cards[0]):
+            # Checks which is the highest card and prints the winner in the 'result' field
+            if self.round_winner_check(p1_card, p2_card, p1_card[0]):
                 self.p1_wins += 1
                 self.score.setText(f'{self.p1_wins} x '
                                    f'{self.p2_wins} ')
-                self.result.setText('Jogador 1 ganhou')
+                self.result.setText('Player 1 Won')
             else:
                 self.p2_wins += 1
                 self.score.setText(f'{self.p1_wins} x '
                                    f'{self.p2_wins} ')
-                self.result.setText('Jogador 2 ganhou')
+                self.result.setText('Player 1 Won')
             self.limiter()
             self.to_distribute_main()
-            return carta_p2
+            return p2_card
 
+    # Responsible for checking the winner of the round
     def round_winner_check(self, move_p1, move_p2, suit):
         val = {'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         p1 = int(move_p1[1:]) if move_p1[1:] not in val else val[move_p1[1:]]
