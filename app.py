@@ -2,19 +2,21 @@ import sys
 from design import *
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from Cheap import *
+from time import sleep
 
 
 class Tab(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         super().setupUi(self)
+        self.setFixedSize(self.size())
         self.plays = []
         self.cheap = Cheap()
         self.p1_wins = 0
         self.p2_wins = 0
         self.p1_cards = self.cheap.to_distribute()
         self.p2_cards = self.cheap.to_distribute()
-        self.current_winner = 2
+        self.current_winner = 0
         self.btn_restart.clicked.connect(self.restart)
         self.btn_card_1.clicked.connect(lambda: self.click_btn(self.card_1.text(), self.p2_move.text()))
         self.btn_card_2.clicked.connect(lambda: self.click_btn(self.card_2.text(), self.p2_move.text()))
@@ -25,6 +27,7 @@ class Tab(QMainWindow, Ui_MainWindow):
 
     # Responsible for counting the rounds and ending the game
     def limiter(self):
+        self.round.setText(str(self.p1_wins + self.p2_wins))
         if self.p1_wins >= 3 or self.p2_wins >= 3:
             msg = QMessageBox()
             msg.setWindowTitle('GAME OVER!!!')
@@ -34,11 +37,18 @@ class Tab(QMainWindow, Ui_MainWindow):
             msg.exec_()
             self.close()
 
-    # Responsible for clearing all the fields
-    def restart(self):
+    def clean_fields(self):
         self.plays.clear()
         self.p1_move.clear()
         self.p2_move.clear()
+        self.result.clear()
+        self.score.clear()
+        self.round.clear()
+        self.best.clear()
+
+    # Responsible for clearing all the fields
+    def restart(self):
+        self.clean_fields()
         self.p1_cards = self.cheap.to_distribute()
         self.p2_cards = self.cheap.to_distribute()
         self.to_distribute_main()
@@ -49,7 +59,7 @@ class Tab(QMainWindow, Ui_MainWindow):
         # If there is no value, none action is taken
         if not card:
             return
-        # If there is, the value will be removed from the list 'p1_cards' and printed in the field
+        # If so, the value will be removed from the list 'p1_cards' and printed in the field
         self.p1_cards[self.p1_cards.index(card)] = None
         if not p2_card:
             # If there is no card in the field of player 2, I am the first, and then he plays
@@ -58,7 +68,7 @@ class Tab(QMainWindow, Ui_MainWindow):
             self.p2_plays(card)
             self.to_distribute_main()
         else:
-            # If there is, my card will be compared with p2's card
+            # If so, my card will be compared with p2's card
             self.plays.append(card)
             self.p1_move.setText(card)
             # Define the winner
@@ -73,7 +83,10 @@ class Tab(QMainWindow, Ui_MainWindow):
                                    f'{self.p2_wins} ')
                 self.result.setText('Player 2 Won!')
             self.limiter()
+            #sleep(5)
+            #self.clean_fields()
             self.to_distribute_main()
+
 
     # Distribute the cards according to the lists
     def to_distribute_main(self):
@@ -171,8 +184,10 @@ class Tab(QMainWindow, Ui_MainWindow):
         p2 = int(move_p2[1:]) if move_p2[1:] not in val else val[move_p2[1:]]
 
         if move_p1[0] == move_p2[0]:
+            self.best.setText('Player 1')
             return True if p1 > p2 else False
         else:
+            self.best.setText('Player 2')
             return True if suit == move_p1[0] else False
 
 
